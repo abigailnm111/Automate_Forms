@@ -13,9 +13,12 @@ import re
 import os
 from math import ceil
 
+import write_pre_offer as offer
+
 #############################################################
 #IMPORT DATA FROM ASSIGNMENT SPREADSHEET
 location= os.path.dirname(os.path.abspath(__file__))
+course_list=os.path.join(location,'test_courses.txt')
 def get_courseloads(file):
     
     filename=os.path.join(location, file)
@@ -44,6 +47,7 @@ class Faculty:
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
                     if cr != []:
                         self.F_courses.append(cr[0])
+                    self.F_courses=self.get_course_names(self.F_courses)
                 else:
                     self.F_courses=[]
                 i="D"+row
@@ -52,6 +56,7 @@ class Faculty:
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
                     if cr != []:
                         self.W_courses.append(cr[0])
+                    self.W_courses=self.get_course_names(self.W_courses)
                 else:
                     self.W_courses=[]
                 i="E"+row
@@ -60,6 +65,7 @@ class Faculty:
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
                     if cr != []:
                         self.S_courses.append(cr[0])
+                    self.S_courses=self.get_course_names(self.S_courses)
                 else:
                     self.S_courses=[]
                     
@@ -67,6 +73,7 @@ class Faculty:
     def get_quarters(self):  
         self.quarters=0
         if self.F_courses != []:
+            
             self.quarters+=1
         if self.W_courses != []:
             self.quarters+=1
@@ -142,7 +149,7 @@ class Faculty:
     def get_last_value_in_history(self,sheet, base_salary, empty_row, increase):
         i=0
         for column in ["H","J", "O"]:
-            print (column) 
+            
             list_of_values=[]
             for row in sheet[column+"2":(column+str(empty_row-1))]:
                 for cell in row:
@@ -174,7 +181,7 @@ class Faculty:
                 else:
                     self.annual=[ceil(q*(1+increase/100))]
                 self.monthly= [self.annual[0]/self.mo_paid_over]
-            print ("i", i)
+            
             
             i+=1
         return self.HRquarters, self.annual, self.monthly
@@ -232,9 +239,25 @@ class Faculty:
                 self.annual= ["ATTENTION"]
                 self.monthly= ["ATTENTION"]
             return self.start, self.end
-                
-         
+        
+    def get_course_names(self, quarter):      
+        course_names=open(course_list,'r')
+        
+        course_title_list=[]
+        i=1
+        for course in quarter:
+            title= course.split(' ')
             
+            for c in course_names:
+                
+                course_title=re.search("%s[.].+"%title[2],c)
+                if course_title!= None:
+                    if i<len(quarter):
+                        course_title_list.append(title[0]+" "+course_title.group()+", ")
+                    else:
+                        course_title_list.append(title[0]+" "+course_title.group())
+                i+=1
+        return course_title_list    
    
 
 def get_rank_ranges(year_assign):
@@ -384,7 +407,7 @@ def get_first_empty_cell(ws,column):
 def main():
     AY= input("enter first year of academic year Ex. '20XX'")
     file=input("enter courseload file name: ex: courseload AY.xslx")
-    base_salary= int(input("a base annual salary will be inputed for faculty without a salary history. What base salary do you want to be entered?(Do not include a '$' or comma)"))
+    base_salary= int(input("a base annual salary will be inputed for faculty without a salary history. What base salary do you want to be entered?(Do not include a '$' or comma)Base salary should include any Range Adjustments."))
     RA= input("Is there a Range adjustment effective 7/1/"+AY+"? ('Y' or' N')")
     if (RA== "Y") or (RA== "y"):
         increase= int(input("enter the percentage amount (number only Ex: 'x'%)"))
@@ -418,6 +441,7 @@ def main():
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
         update_history_record(faculty, a_sheet, AY, base_salary, HR, increase)
+        offer.write_pre_offer_letter(faculty)
         
         for warning in faculty.warnings:
             print (warning)
