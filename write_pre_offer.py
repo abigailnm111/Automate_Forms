@@ -10,6 +10,16 @@ import re
 from docx import Document
 import docx2txt
 
+def format_course(course):
+    for c in course:
+            title= course.split(' ',1)
+            if ("course" in title[1]) or ("Course" in title[1]):
+                course_format= course
+            else:   
+                course_format= title[0]+" sections: "+title[1]
+            
+    return course_format   
+
 def write_pre_offer_letter(lecturer):
     template= docx2txt.process('Pre6-letter-template.docx')
     new_doc=Document('Letterhead.docx')
@@ -19,11 +29,34 @@ def write_pre_offer_letter(lecturer):
     today= date.today()
     
     letter_date= today.strftime("%B %d, %Y")
+    all_courses=[]
+    if lecturer.F_courses!=[]:
+        c= "".join(str(format_course(course)+", ") for course in lecturer.F_courses)
+        
+        courses=c[:-2]
+        
+        all_courses.append("Fall: "+courses+"\n\t\t\t\t")
+        
+    if lecturer.W_courses!=[]:
     
+                
+        c= "".join(str(format_course(course)+", ") for course in lecturer.W_courses)
+        
+        courses=c[:-2]
+        
+        all_courses.append("Winter: "+courses+"\n\t\t\t\t")
+        
+    if lecturer.S_courses!=[]:
+        
+        c= "".join(str(format_course(course)+", ") for course in lecturer.S_courses)
+        
+        courses=c[:-2]
+        
+        all_courses.append("Spring: "+courses+"\n\t\t\t\t")
+        
     
-    
-    all_courses=lecturer.F_courses+lecturer.W_courses+lecturer.S_courses
-    courses= "".join(str(course) for course in all_courses)
+    #all_courses=lecturer.F_courses+lecturer.W_courses+lecturer.S_courses
+    courses= "".join(str(quarter) for quarter in all_courses)
     job_code=str(lecturer.job_code[0])
     
     
@@ -36,7 +69,7 @@ def write_pre_offer_letter(lecturer):
         
     
     for s_date in lecturer.start:
-        #if lecturer.job_code[i]=="1630" or lecturer.job_code[i]== "1632":
+       # if lecturer.job_code[i]=="1630" or lecturer.job_code[i]== "1632":
             start_end= lecturer.start[i]+" - "+lecturer.end[i]
             annual=str(lecturer.annual[0])
             monthly=str(lecturer.monthly[0])

@@ -45,27 +45,32 @@ class Faculty:
                 if year_assign[i].value != None:
                     self.F_courses= re.findall('[1-3]\s[A-Za-z]{2,4}\s\d{1,3}[a-zA-Z]*', year_assign[i].value)
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
+                    self.F_courses=self.get_course_names(self.F_courses)
                     if cr != []:
                         self.F_courses.append(cr[0])
-                    self.F_courses=self.get_course_names(self.F_courses)
+                    
                 else:
                     self.F_courses=[]
                 i="D"+row
                 if year_assign[i].value != None:
                     self.W_courses= re.findall('[1-3]\s[A-Za-z]{2,4}\s\d{1,3}[a-zA-Z]*', year_assign[i].value)
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
+                    self.W_courses=self.get_course_names(self.W_courses)
                     if cr != []:
                         self.W_courses.append(cr[0])
-                    self.W_courses=self.get_course_names(self.W_courses)
+                   
                 else:
                     self.W_courses=[]
                 i="E"+row
                 if year_assign[i].value != None:
                     self.S_courses=re.findall('[1-3]\s[A-Za-z]{2,4}\s\d{1,3}[a-zA-Z]*', year_assign[i].value)
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
+                    
+                    self.S_courses=self.get_course_names(self.S_courses)
+                    print(self.S_courses)
                     if cr != []:
                         self.S_courses.append(cr[0])
-                    self.S_courses=self.get_course_names(self.S_courses)
+                    
                 else:
                     self.S_courses=[]
                     
@@ -249,10 +254,10 @@ class Faculty:
             title= course.split(' ')
             
             for c in course_names:
-                
+                print(title[2])
                 course_title=re.search("%s[.].+"%title[2],c)
                 if course_title!= None:
-                    if i<len(quarter):
+                    if i==len(quarter):
                         course_title_list.append(title[0]+" "+course_title.group()+", ")
                     else:
                         course_title_list.append(title[0]+" "+course_title.group())
