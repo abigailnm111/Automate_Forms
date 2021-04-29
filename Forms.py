@@ -246,22 +246,24 @@ class Faculty:
             return self.start, self.end
         
     def get_course_names(self, quarter):      
-        course_names=open(course_list,'r')
+        course_titles=open(course_list,'r')
+        course_dict=[]
+        for course in course_titles:
+            if course is not " ":
+                course_dict.append(course)
         
         course_title_list=[]
         i=1
         for course in quarter:
             title= course.split(' ')
             
-            for c in course_names:
-                print(title[2])
-                course_title=re.search("%s[.].+"%title[2],c)
+            for t in course_dict:
+                
+                course_title=re.search("%s[.].+"%title[2],t)
+                
                 if course_title!= None:
-                    if i==len(quarter):
-                        course_title_list.append(title[0]+" "+course_title.group()+", ")
-                    else:
-                        course_title_list.append(title[0]+" "+course_title.group())
-                i+=1
+                   course_title_list.append(title[0]+" "+course_title.group())
+            i+=1
         return course_title_list    
    
 

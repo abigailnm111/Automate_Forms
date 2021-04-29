@@ -16,9 +16,32 @@ def format_course(course):
             if ("course" in title[1]) or ("Course" in title[1]):
                 course_format= course
             else:   
-                course_format= title[0]+" sections: "+title[1]
+                course_format= title[0]+" section(s): "+title[1]
             
     return course_format   
+
+
+def format_courses_by_quarter(lecturer):
+    all_courses=[]
+    if lecturer.F_courses!=[]:
+        c= "".join(str(format_course(course)+",\n\t\t\t\t") for course in lecturer.F_courses)
+        courses=c[:-7]+c[-5:]
+        all_courses.append("Fall: "+courses)
+        
+    if lecturer.W_courses!=[]:
+      
+        c= "".join(str(format_course(course)+",\n\t\t\t\t") for course in lecturer.W_courses)
+        courses=c[:-7]+c[-5:]
+        all_courses.append("Winter: "+c)
+        
+    if lecturer.S_courses!=[]:
+        
+        c= "".join(str(format_course(course)+",\n\t\t\t\t") for course in lecturer.S_courses)
+        courses=c[:-7]+c[-5:]
+        all_courses.append("Spring: "+c)
+
+    courses= "".join(str(quarter) for quarter in all_courses)
+    return courses
 
 def write_pre_offer_letter(lecturer):
     template= docx2txt.process('Pre6-letter-template.docx')
@@ -29,34 +52,8 @@ def write_pre_offer_letter(lecturer):
     today= date.today()
     
     letter_date= today.strftime("%B %d, %Y")
-    all_courses=[]
-    if lecturer.F_courses!=[]:
-        c= "".join(str(format_course(course)+", ") for course in lecturer.F_courses)
-        
-        courses=c[:-2]
-        
-        all_courses.append("Fall: "+courses+"\n\t\t\t\t")
-        
-    if lecturer.W_courses!=[]:
+    courses=format_courses_by_quarter(lecturer)
     
-                
-        c= "".join(str(format_course(course)+", ") for course in lecturer.W_courses)
-        
-        courses=c[:-2]
-        
-        all_courses.append("Winter: "+courses+"\n\t\t\t\t")
-        
-    if lecturer.S_courses!=[]:
-        
-        c= "".join(str(format_course(course)+", ") for course in lecturer.S_courses)
-        
-        courses=c[:-2]
-        
-        all_courses.append("Spring: "+courses+"\n\t\t\t\t")
-        
-    
-    #all_courses=lecturer.F_courses+lecturer.W_courses+lecturer.S_courses
-    courses= "".join(str(quarter) for quarter in all_courses)
     job_code=str(lecturer.job_code[0])
     
     
