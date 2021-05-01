@@ -249,7 +249,7 @@ class Faculty:
         course_titles=open(course_list,'r')
         course_dict=[]
         for course in course_titles:
-            if course is not " ":
+            if course != "\n":
                 course_dict.append(course)
         
         course_title_list=[]
@@ -448,7 +448,7 @@ def main():
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
         update_history_record(faculty, a_sheet, AY, base_salary, HR, increase)
-        offer.write_pre_offer_letter(faculty)
+        offer.write_letter(faculty, AY)
         
         for warning in faculty.warnings:
             print (warning)
