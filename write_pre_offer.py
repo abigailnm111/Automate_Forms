@@ -7,7 +7,7 @@ Created on Tue Apr 13 10:24:12 2021
 
 from datetime import date
 import re
-from docx import Document
+from docx import Document, shared
 import docx2txt
 
 #pre_template= docx2txt.process('Pre6-letter-template.docx')
@@ -102,5 +102,9 @@ def write_letter(lecturer, AY):
     for key in data:
         template=re.sub(key, data[key] , template)
     #Save letters
-    new_doc.add_paragraph(template)
+    run=new_doc.add_paragraph(template). add_run()
+    style=new_doc.styles['Normal']
+    font=style.font
+    font.name=  "Garamond"
+    font.size= shared.Pt(11)
     new_doc.save(AY+lecturer.last_name+"_"+lecturer.first_name+'.docx')
