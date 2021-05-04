@@ -9,8 +9,12 @@ Created on Sun May  2 21:33:27 2021
 import pdfrw
 
 employee_dict={
+        
         'name_p1':' Regina George',
         'dept_p1': "Mathletes",
+        'accrued_qtr':'10', #History record quarter count
+        'yes': True,
+        
         
         }
 def get_fields():
@@ -31,12 +35,15 @@ def get_fields():
             if annotation[SUBTYPE_KEY]== WIDGET_SUBTYPE_KEY:
                 if annotation[ANNOT_FIELD_KEY]:
                     key= annotation[ANNOT_FIELD_KEY][1:-1]
+                    
                     if key in employee_dict.keys():
-                        if type(employee_dict[key]== bool):
+                        
+                        if type(employee_dict[key])== bool:
                             if employee_dict[key]==True:
                                 annotation.update(pdfrw.PdfDict(
                                    AS=pdfrw.PdfName('Yes')))
                         else:
+                            print(employee_dict[key])
                             annotation.update(
                                 pdfrw.PdfDict(V='{}'.format(employee_dict[key]))
                             )
