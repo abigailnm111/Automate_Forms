@@ -14,7 +14,7 @@ employee_dict={
         'name_p1':' Regina George',
         'dept_p1': "Mathletes",
         'accrued_qtr':'10', #History record quarter count
-        'type_reivew_p1': True,
+        #'type_reivew_p1': True,
        
         
         
@@ -58,10 +58,19 @@ def pdfrw_get_fields():
 #get_fields()
 
 def get_fields():
-    #output=PyPDF2.PdfFileWriter("new_form.pdf")
+    output=PyPDF2.PdfFileWriter()
     template=PyPDF2.PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
     fields=template.getFields()
-    print(fields)
+    
+    #writer._root_object.update({NameObject("")})
+   # print(type(fields['type_review_p1']["/Kids"][0]))
+    
+    
+    output.addPage(template.getPage(0))
+    output.addPage(template.getPage(1))
+    output.updatePageFormFieldValues(output.getPage(0), employee_dict)
+    outputStream=open("NewPDF.pdf", "wb")
+    output.write(outputStream)
     
 get_fields()
 #type_review_p1: 'appt', 'reappt'
