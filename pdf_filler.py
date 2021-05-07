@@ -6,7 +6,6 @@ Created on Sun May  2 21:33:27 2021
 @author: panda
 """
 
-import pdfrw
 import PyPDF2
 
 employee_dict={
@@ -15,66 +14,54 @@ employee_dict={
         'dept_p1': "Mathletes",
         'accrued_qtr':'10', #History record quarter count
         #'type_reivew_p1': True,
-       
+       'uid_p2':'12345678'
         
         
         }
-def pdfrw_get_fields():
-    pdf_template="1_Pre6_form.pdf"
-    pdf_output="new_form.pdf"
-    template_pdf=pdfrw.PdfReader(pdf_template)
+
+radio_dict={
+    'type_increase': '/4th_year',
+    'type_review_p1':'/reappt'
     
-    ANNOT_KEY = '/Annots'
-    ANNOT_FIELD_KEY = '/T'
-    ANNOT_VAL_KEY = '/V'
-    ANNOT_RECT_KEY = '/Rect'
-    SUBTYPE_KEY = '/Subtype'
-    WIDGET_SUBTYPE_KEY = '/Widget'
-    
-    for page in template_pdf.pages:
-        annotations=page[ANNOT_KEY]
-        for annotation in annotations:
-            if annotation[SUBTYPE_KEY]== WIDGET_SUBTYPE_KEY:
-                if annotation[ANNOT_FIELD_KEY]:
-                    key= annotation[ANNOT_FIELD_KEY][1:-1]
-                    
-                    if key in employee_dict.keys():
-                        print(key)
-                        
-                        if type(employee_dict[key])== bool:
-                            if employee_dict[key]==True:
-                                annotation.update(pdfrw.PdfDict(
-                                   AS=pdfrw.PdfName('Yes')))
-                        else:
-                            
-                            annotation.update(
-                                pdfrw.PdfDict(V='{}'.format(employee_dict[key]))
-                            )
-                            annotation.update(pdfrw.PdfDict(AP=''))
-    template_pdf.Root.AcroForm.update(pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject('true')))
-    pdfrw.PdfWriter().write(pdf_output, template_pdf)
+    }
+
 
   
-#get_fields()
+
 
 def get_fields():
     output=PyPDF2.PdfFileWriter()
     template=PyPDF2.PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
-    fields=template.getFields()
     
-    #writer._root_object.update({NameObject("")})
-   # print(type(fields['type_review_p1']["/Kids"][0]))
     
     
     output.addPage(template.getPage(0))
     output.addPage(template.getPage(1))
-    output.updatePageFormFieldValues(output.getPage(0), employee_dict)
+    
+    for i in [0,1]:
+        output.updatePageFormFieldValues(output.getPage(i), employee_dict)
+        
+        
+        #From PyPDF Library for updatePageFormFieldValues but edited for NameObject as value
+        #accesses parent of object to get NameID
+        page=output.getPage(i)
+        
+        for j in range(0, len(page['/Annots'])):
+                writer_annot = page['/Annots'][j].getObject()    
+                for field in radio_dict:
+                    if "/Parent" in writer_annot:
+                        if writer_annot["/Parent"].get("/T") == field:
+                            writer_annot.update({
+                                PyPDF2.generic.NameObject("/V"):PyPDF2.generic.NameObject(radio_dict[field]),
+                                PyPDF2.generic.NameObject("/AS"):PyPDF2.generic.NameObject(radio_dict[field])})
+        
+    #print(output.getPage(1)['/Annots'][0].getObject())
+    
+  
+    
     outputStream=open("NewPDF.pdf", "wb")
     output.write(outputStream)
-    
-get_fields()
-#type_review_p1: 'appt', 'reappt'
-#type_increase:"merit",'4th_year'
-#######Notes
-#/Ft= field type
+   
+
+
 
