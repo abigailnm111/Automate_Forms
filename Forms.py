@@ -14,11 +14,13 @@ import os
 from math import ceil
 
 import write_pre_offer as offer
+import pdf_filler
 
 #############################################################
 #IMPORT DATA FROM ASSIGNMENT SPREADSHEET
 location= os.path.dirname(os.path.abspath(__file__))
 course_list=os.path.join(location,'test_courses.txt')
+dept_data=os.path.join(location, "Department data page.xlsx")
 def get_courseloads(file):
     
     filename=os.path.join(location, file)
@@ -67,7 +69,7 @@ class Faculty:
                     cr= re.findall('[1-3]\s[cC]ourse\s[rR]elease', year_assign[i].value)
                     
                     self.S_courses=self.get_course_names(self.S_courses)
-                    print(self.S_courses)
+                    
                     if cr != []:
                         self.S_courses.append(cr[0])
                     
@@ -153,7 +155,7 @@ class Faculty:
     
     def get_last_value_in_history(self,sheet, base_salary, empty_row, increase):
         i=0
-        for column in ["H","J", "O"]:
+        for column in ["H","J", "O","M"]:
             
             list_of_values=[]
             for row in sheet[column+"2":(column+str(empty_row-1))]:
@@ -181,11 +183,15 @@ class Faculty:
             elif i==2:
                 self.get_job_code()
                 if q==0:
+                    self.hr_salary=""
                     self.annual= [base_salary]
                     self.warnings.append(self.last_name+": base salary used")
                 else:
                     self.annual=[ceil(q*(1+increase/100))]
+                    self.hr_salary=self.annual[0]
                 self.monthly= [self.annual[0]/self.mo_paid_over]
+            elif i==3:
+                self.hr_percentage= q
             
             
             i+=1
@@ -265,6 +271,16 @@ class Faculty:
                    course_title_list.append(title[0]+" "+course_title.group())
             i+=1
         return course_title_list    
+    
+    def set_starting_data(self, base_salary):
+        self.HRquarters=0
+        self.status=["pre"]
+        self.get_job_code()
+        self.annual= [base_salary]
+        self.monthly= [self.annual[0]/self.mo_paid_over]
+        self.warnings.append(self.last_name+": base salary used")
+        self.hr_percentage=''
+        self.hr_salary=0
    
 
 def get_rank_ranges(year_assign):
@@ -279,7 +295,6 @@ def get_rank_ranges(year_assign):
             pre_start_row= int(pre_start_row)
     return cont_start_row, pre_start_row
         
-
 
     
 #########################################################
@@ -311,6 +326,7 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                 total_quarters= lecturer.HRquarters+lecturer.quarters
                 
                 
+                
                 ##checks for 9th quarter to alert user- no affect on documents
                 if 9 in range(lecturer.HRquarters+1,total_quarters+1):
                     lecturer.warnings.append(lecturer.last_name+":9th quarter warning- check for 9th quarter mentoring meeting")
@@ -324,12 +340,7 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                     lecturer.warnings.append(lecturer.last_name+":19th quarter warning- check for Continuing Appointment")
                     lecturer.pre6_milestone_check(AY, 19, "Initial Continuing Appointment")    
             else:
-                lecturer.HRquarters=0
-                lecturer.status=["pre"]
-                lecturer.get_job_code()
-                lecturer.annual= [base_salary]
-                lecturer.monthly= [lecturer.annual[0]/lecturer.mo_paid_over]
-                lecturer.warnings.append(lecturer.last_name+": base salary used")
+                lecturer.set_starting_data(base_salary)
                 
             
                     
@@ -410,16 +421,24 @@ def get_first_empty_cell(ws,column):
             
             return cell.row
 #write document
+class DeptData:
+    
+    def __init__(self,dept_file):
+        datasheet= openpyxl.load_workbook(dept_file)
+        data= datasheet.active
+        self.AY=str(data['B1'].value)
+        self.base_salary=data["B2"].value
+        self.RA=data['B3'].value
+        self.code=data["B4"].value
+        self.contact_name=data["B5"].value
+        self.contact_ext=data["B6"].value
+        self.FAU=data["B7"].value
+        self.name=data["B8"].value
 
 def main():
-    AY= input("enter first year of academic year Ex. '20XX'")
+    
     file=input("enter courseload file name: ex: courseload AY.xslx")
-    base_salary= int(input("a base annual salary will be inputed for faculty without a salary history. What base salary do you want to be entered?(Do not include a '$' or comma)Base salary should include any Range Adjustments."))
-    RA= input("Is there a Range adjustment effective 7/1/"+AY+"? ('Y' or' N')")
-    if (RA== "Y") or (RA== "y"):
-        increase= int(input("enter the percentage amount (number only Ex: 'x'%)"))
-    else:
-        increase=0
+    dept=DeptData(dept_data)
     year_assign=get_courseloads(file)
     all_lec=[]
     c_range, p_range=get_rank_ranges(year_assign)
@@ -447,10 +466,11 @@ def main():
             
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
-        update_history_record(faculty, a_sheet, AY, base_salary, HR, increase)
-        offer.write_letter(faculty, AY)
+        update_history_record(faculty, a_sheet, dept.AY, dept.base_salary, HR, dept.RA)
+        offer.write_letter(faculty, dept.AY)
+        pdf_filler.fill_form(faculty, dept.AY, HR, dept)
         
         for warning in faculty.warnings:
             print (warning)
-        wp.save(os.path.join(location, AY+faculty.last_name+"." +faculty.first_name+".xlsx"))
+        wp.save(os.path.join(location, dept.AY+faculty.last_name+"." +faculty.first_name+".xlsx"))
 main()
