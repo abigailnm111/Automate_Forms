@@ -5,6 +5,7 @@ Created on Sun May  2 21:33:27 2021
 
 @author: panda
 """
+from PyPDF2.generic import NameObject, BooleanObject,TextStringObject
 
 import PyPDF2
 def fill_form(lecturer,AY,HR,dept):
@@ -23,7 +24,7 @@ def fill_form(lecturer,AY,HR,dept):
             'dept_p1': dept.name,
             'accrued_qtr':lecturer.quarters, #History record quarter count
             'present_title_p1':present_title,
-            #**proposed_title_p1
+            
             'present_salary':present_salary,
             'proposed_salary_p1':"{:,}".format(lecturer.annual[0]),
             
@@ -119,45 +120,59 @@ def fill_form(lecturer,AY,HR,dept):
                 
         }
 
-
+    choice_dict={
+        'proposed_title_p1':[1],
+        }
     
-
 
 
     output=PyPDF2.PdfFileWriter()
     template=PyPDF2.PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
-    fields=template.getFields()
-    #for field in fields:
-        
-       # print(field)
     
-    output.addPage(template.getPage(0))
-    output.addPage(template.getPage(1))
+    fields=template.getFields()
+    
+   
+        
+
+    output.cloneReaderDocumentRoot(template)
+    
+    
     
     for i in [0,1]:
-        output.updatePageFormFieldValues(output.getPage(i), employee_dict)
         
+        output.updatePageFormFieldValues(template.getPage(i), employee_dict)
+        output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
         
         #From PyPDF Library for updatePageFormFieldValues but edited for NameObject as value
         #accesses parent of object to get NameID
-        page=output.getPage(i)
+        page=template.getPage(i)
         
         for j in range(0, len(page['/Annots'])):
-                writer_annot = page['/Annots'][j].getObject()    
+                writer_annot = page['/Annots'][j].getObject()   
+                
+                #need to figure out how to set dropdowns
+                # for field in choice_dict:
+                #     if writer_annot.get("/T")==field:
+                #         writer_annot.update({
+                #                 NameObject("/V"):NameObject(choice_dict[field]),
+                #                 NameObject("/AS"):NameObject(choice_dict[field])
+                #                 })
+                        
+                        
                 for field in radio_dict:
                     if "/Parent" in writer_annot:
                         if writer_annot["/Parent"].get("/T") == field:
                             writer_annot.update({
-                                PyPDF2.generic.NameObject("/V"):PyPDF2.generic.NameObject(radio_dict[field]),
-                                PyPDF2.generic.NameObject("/AS"):PyPDF2.generic.NameObject(radio_dict[field])})
+                                NameObject("/V"):NameObject(radio_dict[field]),
+                                NameObject("/AS"):NameObject(radio_dict[field])})
         
-    #print(output.getPage(1)['/Annots'][0].getObject())
     
-  
+    #print( template.getPage(0)['/Annots'][13].getObject())
     
+
     outputStream=open(lecturer.last_name+"."+lecturer.first_name+"_form.pdf", "wb")
     output.write(outputStream)
    
 
-
-
+#dropdown to fix
+#proposed title::  'proposed_title_p1': {'/FT': '/Ch', '/T': 'proposed_title_p1', '/Ff': 131072, '/V': '* Choose Title', '/DV': '1633, CONT LECTURER 9/9'},
