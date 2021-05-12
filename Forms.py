@@ -155,7 +155,7 @@ class Faculty:
     
     def get_last_value_in_history(self,sheet, base_salary, empty_row, increase):
         i=0
-        for column in ["H","J", "O","M"]:
+        for column in ["H","J", "O","M", "A"]:
             
             list_of_values=[]
             for row in sheet[column+"2":(column+str(empty_row-1))]:
@@ -192,6 +192,9 @@ class Faculty:
                 self.monthly= [self.annual[0]/self.mo_paid_over]
             elif i==3:
                 self.hr_percentage= q
+                
+
+                
             
             
             i+=1
