@@ -5,10 +5,11 @@ Created on Sun May  2 21:33:27 2021
 
 @author: panda
 """
-from PyPDF2.generic import NameObject, BooleanObject, TextStringObject
+from PyPDF2.generic import NameObject, BooleanObject, TextStringObject, IndirectObject, DictionaryObject, ArrayObject,RectangleObject
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from datetime import date
 
+today= date.today()
 present_date=today.strftime("%B %d, %Y")
 
 def course_formatting(courses, qtr):
@@ -202,3 +203,38 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
 def fill_form(lecturer,AY,HR,dept):
     employee_dict,radio_dict, choice_dict=form_dicts(lecturer,AY,HR,dept)
     write_form(lecturer, employee_dict, radio_dict, choice_dict)
+    
+def test():
+   # test=PdfFileReader(open("NewPDF.pdf", 'rb'))
+   # print(test.getPage(0)['/Annots'].getObject())
+    output=PdfFileWriter()
+    template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+
+    
+    #fields=template.getFields()
+    #print(fields)
+    print(template.getPage(0)['/Annots'])
+    page=template.getPage(0)
+    i =len(page['/Annots'])
+    obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('/Helv 10 Tf 0 g'),
+                 NameObject('/Subtype'):NameObject('/FreeText'),
+                 NameObject('/Rect'):RectangleObject([378.481,426.012, 450.601, 426.892 ]),
+                 NameObject('/Type'):NameObject('/Annot'), 
+                 NameObject('/Contents'):TextStringObject('4/1/2020')} ))
+    page['/Annots'].append(obj)
+        
+    print(template.getPage(0))
+    #print(output._root_object)
+    #template.getPage(0)['/Annots']
+    
+    output.cloneReaderDocumentRoot(template)
+    output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
+    outputStream=open("NewPDF.pdf", "wb")
+    output.write(outputStream)
+test()
+
+#begin date RECT [378.481, 427.012, 450.601, 438.892]
+#end date RECT[465.361, 427.012, 537.361, 438.892]
+
+#begin date 2[378.481,527.012, 450.601, 538.892 ]
+#end date 2[465.361,527.012, 537.361,538.892]
