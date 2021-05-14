@@ -211,23 +211,22 @@ def test():
     template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
 
     
-    #fields=template.getFields()
-    #print(fields)
-    print(template.getPage(0)['/Annots'])
+    
     page=template.getPage(0)
-    i =len(page['/Annots'])
-    obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('/Helv 10 Tf 0 g'),
+   
+    obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('/Helv 10 Tf 0 g TJ'),
                  NameObject('/Subtype'):NameObject('/FreeText'),
-                 NameObject('/Rect'):RectangleObject([378.481,426.012, 450.601, 426.892 ]),
+                 NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
                  NameObject('/Type'):NameObject('/Annot'), 
                  NameObject('/Contents'):TextStringObject('4/1/2020')} ))
     page['/Annots'].append(obj)
-        
-    print(template.getPage(0))
+     
+    
     #print(output._root_object)
     #template.getPage(0)['/Annots']
     
     output.cloneReaderDocumentRoot(template)
+    
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
     outputStream=open("NewPDF.pdf", "wb")
     output.write(outputStream)
