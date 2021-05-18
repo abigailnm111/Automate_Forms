@@ -5,7 +5,7 @@ Created on Sun May  2 21:33:27 2021
 
 @author: panda
 """
-from PyPDF2.generic import NameObject, BooleanObject, TextStringObject, IndirectObject, DictionaryObject, ArrayObject,RectangleObject
+from PyPDF2.generic import NameObject, BooleanObject, TextStringObject, IndirectObject, DictionaryObject, ArrayObject,RectangleObject, FloatObject
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from datetime import date
 
@@ -100,8 +100,8 @@ def form_dicts(lecturer,AY,HR,dept):
             'present_percent_p1':lecturer.hr_percentage,## not working
             'proposed_percent_p1':lecturer.percentage,
             'present_add_comment_p1':'',
-            'begin_date_p1':lecturer.start,
-            'end_date_p1':lecturer.end,
+            'begin_date_p1':lecturer.start[0],
+            'end_date_p1':lecturer.end[0],
             # bio_data_note
             # degree1_p1
             # date1_p1
@@ -166,6 +166,7 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
     
     
+        
     for i in [0,1]:
         
         output.updatePageFormFieldValues(template.getPage(i), employee_dict)
@@ -174,6 +175,8 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
         #Checkboxes and drop downs:From PyPDF Library for updatePageFormFieldValues but edited for NameObject as value 
         
         page=template.getPage(i)
+        
+        
         
         for j in range(0, len(page['/Annots'])):
                 writer_annot = page['/Annots'][j].getObject()   
@@ -195,6 +198,17 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                             writer_annot.update({
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
+        if len(lecturer.start)==2 and i==0:
+             start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
+             obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject(' /Helv 10 Tf'),
+                     NameObject('/Subtype'):NameObject('/FreeText'),
+                     NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
+                     NameObject('/Type'):NameObject('/Annot'), 
+                     NameObject('/Contents'):TextStringObject(start_end_2),
+                     NameObject('/C'):ArrayObject([FloatObject(1),FloatObject(1),FloatObject(1)]),
+                     
+                     } ))
+             page['/Annots'].append(obj)
  
     outputStream=open(lecturer.last_name+"."+lecturer.first_name+"_form.pdf", "wb")
     output.write(outputStream)
@@ -204,33 +218,34 @@ def fill_form(lecturer,AY,HR,dept):
     employee_dict,radio_dict, choice_dict=form_dicts(lecturer,AY,HR,dept)
     write_form(lecturer, employee_dict, radio_dict, choice_dict)
     
-def test():
-   # test=PdfFileReader(open("NewPDF.pdf", 'rb'))
-   # print(test.getPage(0)['/Annots'].getObject())
-    output=PdfFileWriter()
-    template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
-
+# def test():
     
+#     output=PdfFileWriter()
+#     template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+#     fields=template.getFields()
+#     #print(fields)
     
-    page=template.getPage(0)
+#     page=template.getPage(0)
    
-    obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('/Helv 10 Tf 0 g TJ'),
-                 NameObject('/Subtype'):NameObject('/FreeText'),
-                 NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
-                 NameObject('/Type'):NameObject('/Annot'), 
-                 NameObject('/Contents'):TextStringObject('4/1/2020')} ))
-    page['/Annots'].append(obj)
+#     obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('0 0 0 rg /Helv 10 Tf TJ'),
+#                   NameObject('/Subtype'):NameObject('/FreeText'),
+#                   NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
+#                   NameObject('/Type'):NameObject('/Annot'), 
+#                   NameObject('/Contents'):TextStringObject('4/1/2021'),
+#                  
+#                                                 } ))
+#     page['/Annots'].append(obj)
      
     
-    #print(output._root_object)
-    #template.getPage(0)['/Annots']
+#     #print(output._root_object)
+#     print(template.getPage(0)['/Annots'][37].getObject())
     
-    output.cloneReaderDocumentRoot(template)
+#     output.cloneReaderDocumentRoot(template)
     
-    output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
-    outputStream=open("NewPDF.pdf", "wb")
-    output.write(outputStream)
-test()
+#     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
+#     outputStream=open("NewPDF.pdf", "wb")
+#     output.write(outputStream)
+# test()
 
 #begin date RECT [378.481, 427.012, 450.601, 438.892]
 #end date RECT[465.361, 427.012, 537.361, 438.892]
