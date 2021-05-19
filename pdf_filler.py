@@ -61,9 +61,11 @@ def form_dicts(lecturer,AY,HR,dept):
     if HR=="new":
         present_title=""
         present_salary=""
+        type_review="/appt"
     else:
         present_title=lecturer.title[0]
         present_salary="{:,}".format(lecturer.hr_salary)
+        type_review="/reappt"
         
     course_dict=quarter_info(lecturer)  
     
@@ -91,13 +93,13 @@ def form_dicts(lecturer,AY,HR,dept):
             
             'name_p1':lecturer.first_name+" "+lecturer.last_name,
             'dept_p1': dept.name,
-            'accrued_qtr':lecturer.quarters, #History record quarter count
+            'accrued_qtr':lecturer.quarters, ## Needs to reflect History record quarter count
             'present_title_p1':present_title,
             
             'present_salary':present_salary,
             'proposed_salary_p1':"{:,}".format(lecturer.annual[0]),
             
-            'present_percent_p1':lecturer.hr_percentage,## not working
+            'present_percent_p1':lecturer.hr_percentage,
             'proposed_percent_p1':lecturer.percentage,
             'present_add_comment_p1':'',
             'begin_date_p1':lecturer.start[0],
@@ -119,7 +121,7 @@ def form_dicts(lecturer,AY,HR,dept):
             # other_state_inst_p2
             
             # visa_current
-            'uid_p2':'12345678',
+            #'uid_p2':'12345678',
              'dept_code_p2': dept.code,
             'mo_salary_rate_p2': "{:,.2f}".format(lecturer.monthly[0]),
             
@@ -147,8 +149,8 @@ def form_dicts(lecturer,AY,HR,dept):
     
     employee_dict.update(course_dict)
     radio_dict={
-        'type_increase': '/4th_year',
-        'type_review_p1':'/reappt'
+        'type_increase': '/Off',#'/4th_year' or '/merit' or '/Off'
+        'type_review_p1':type_review #'/appt' or '/reappt'
                 
         }
 
@@ -198,7 +200,7 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                             writer_annot.update({
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
-        if len(lecturer.start)==2 and i==0:
+        if len(lecturer.start)==2 and i==0: # if there are two start dates and it's the first page
              start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
              obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject(' /Helv 10 Tf'),
                      NameObject('/Subtype'):NameObject('/FreeText'),
@@ -223,22 +225,16 @@ def fill_form(lecturer,AY,HR,dept):
 #     output=PdfFileWriter()
 #     template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
 #     fields=template.getFields()
-#     #print(fields)
     
 #     page=template.getPage(0)
-   
-#     obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject('0 0 0 rg /Helv 10 Tf TJ'),
-#                   NameObject('/Subtype'):NameObject('/FreeText'),
-#                   NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
-#                   NameObject('/Type'):NameObject('/Annot'), 
-#                   NameObject('/Contents'):TextStringObject('4/1/2021'),
-#                  
-#                                                 } ))
-#     page['/Annots'].append(obj)
+#     for j in range(0, len(page['/Annots'])):
+#                 writer_annot = page['/Annots'][j].getObject()
+#                 print(writer_annot)
+    
      
     
 #     #print(output._root_object)
-#     print(template.getPage(0)['/Annots'][37].getObject())
+#    # print(template.getPage(0)['/Annots'][34].getObject())
     
 #     output.cloneReaderDocumentRoot(template)
     
@@ -247,8 +243,3 @@ def fill_form(lecturer,AY,HR,dept):
 #     output.write(outputStream)
 # test()
 
-#begin date RECT [378.481, 427.012, 450.601, 438.892]
-#end date RECT[465.361, 427.012, 537.361, 438.892]
-
-#begin date 2[378.481,527.012, 450.601, 538.892 ]
-#end date 2[465.361,527.012, 537.361,538.892]
