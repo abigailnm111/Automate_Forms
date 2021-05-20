@@ -66,6 +66,20 @@ def form_dicts(lecturer,AY,HR,dept):
         present_title=lecturer.title[0]
         present_salary="{:,}".format(lecturer.hr_salary)
         type_review="/reappt"
+    if '10th Quarter Increase' in lecturer.action_type:
+        type_increase="/4th_year"
+    else:
+        type_increase= '/Off'
+    try:
+        prop_annual="{:,}".format(lecturer.annual[0])
+        prop_mo="{:,.2f}".format(lecturer.monthly[0])
+    except:
+        prop_annual=lecturer.annual[0]
+        prop_mo=lecturer.monthly[0]
+    if len(lecturer.end)==2 and lecturer.break_service==False:
+        end_date=lecturer.end[1]
+    else:
+        end_date=lecturer.end[0]
         
     course_dict=quarter_info(lecturer)  
     
@@ -91,19 +105,19 @@ def form_dicts(lecturer,AY,HR,dept):
 
     employee_dict={
             
-            'name_p1':lecturer.first_name+" "+lecturer.last_name,
+            'name_p1':lecturer.last_name+", "+lecturer.first_name,
             'dept_p1': dept.name,
-            'accrued_qtr':lecturer.quarters, ## Needs to reflect History record quarter count
+            'accrued_qtr':lecturer.HRquarters, 
             'present_title_p1':present_title,
             
             'present_salary':present_salary,
-            'proposed_salary_p1':"{:,}".format(lecturer.annual[0]),
+            'proposed_salary_p1':prop_annual,
             
             'present_percent_p1':lecturer.hr_percentage,
             'proposed_percent_p1':lecturer.percentage,
             'present_add_comment_p1':'',
             'begin_date_p1':lecturer.start[0],
-            'end_date_p1':lecturer.end[0],
+            'end_date_p1':end_date,
             # bio_data_note
             # degree1_p1
             # date1_p1
@@ -123,7 +137,7 @@ def form_dicts(lecturer,AY,HR,dept):
             # visa_current
             #'uid_p2':'12345678',
              'dept_code_p2': dept.code,
-            'mo_salary_rate_p2': "{:,.2f}".format(lecturer.monthly[0]),
+            'mo_salary_rate_p2':prop_mo,
             
          
             'avg_percent_p2':lecturer.percentage,
@@ -148,8 +162,9 @@ def form_dicts(lecturer,AY,HR,dept):
             }
     
     employee_dict.update(course_dict)
+    
     radio_dict={
-        'type_increase': '/Off',#'/4th_year' or '/merit' or '/Off'
+        'type_increase': type_increase,#'/4th_year' or '/merit' or '/Off'
         'type_review_p1':type_review #'/appt' or '/reappt'
                 
         }
@@ -159,6 +174,18 @@ def form_dicts(lecturer,AY,HR,dept):
         }
     
     return employee_dict, radio_dict, choice_dict
+
+def add_comment(output,page,text, rectangle):
+    obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject(' /Helv 10 Tf'),
+                     NameObject('/Subtype'):NameObject('/FreeText'),
+                     NameObject('/Rect'):RectangleObject(rectangle),
+                     NameObject('/Type'):NameObject('/Annot'), 
+                     NameObject('/Contents'):TextStringObject(text),
+                     NameObject('/C'):ArrayObject([FloatObject(1),FloatObject(1),FloatObject(1)]),
+                     
+                     } ))
+    page['/Annots'].append(obj)
+    
 def write_form(lecturer,employee_dict, radio_dict, choice_dict):
 
     output=PdfFileWriter()
@@ -200,17 +227,15 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                             writer_annot.update({
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
-        if len(lecturer.start)==2 and i==0: # if there are two start dates and it's the first page
-             start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
-             obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject(' /Helv 10 Tf'),
-                     NameObject('/Subtype'):NameObject('/FreeText'),
-                     NameObject('/Rect'):RectangleObject([379.051, 405.913, 536.515, 424.313]),
-                     NameObject('/Type'):NameObject('/Annot'), 
-                     NameObject('/Contents'):TextStringObject(start_end_2),
-                     NameObject('/C'):ArrayObject([FloatObject(1),FloatObject(1),FloatObject(1)]),
-                     
-                     } ))
-             page['/Annots'].append(obj)
+        if i==0:
+            if len(lecturer.start)==2 and (lecturer.break_service==True): # if there are two start dates and it's the first page
+                 start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
+                 add_comment(output,page, start_end_2, [379.051, 405.913, 536.515, 424.313])
+            if len(lecturer.annual)==2:
+                add_comment(output,page,lecturer.start[1]+": "+lecturer.annual[1],[457.783, 465.165, 582.78, 483.565])
+        if i==1:
+            if len(lecturer.monthly)==2:
+                   add_comment(output, page, lecturer.start[1]+": "+lecturer.monthly[1], [440.738, 679.446, 548.738, 697.846])
  
     outputStream=open(lecturer.last_name+"."+lecturer.first_name+"_form.pdf", "wb")
     output.write(outputStream)
@@ -220,26 +245,28 @@ def fill_form(lecturer,AY,HR,dept):
     employee_dict,radio_dict, choice_dict=form_dicts(lecturer,AY,HR,dept)
     write_form(lecturer, employee_dict, radio_dict, choice_dict)
     
-# def test():
+def test():
     
-#     output=PdfFileWriter()
-#     template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
-#     fields=template.getFields()
+    output=PdfFileWriter()
+    template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+    fields=template.getFields()
     
-#     page=template.getPage(0)
-#     for j in range(0, len(page['/Annots'])):
-#                 writer_annot = page['/Annots'][j].getObject()
-#                 print(writer_annot)
+    page=template.getPage(1)
+    for j in range(0, len(page['/Annots'])):
+                writer_annot = page['/Annots'][j].getObject()
+              #  print(writer_annot)
     
      
     
-#     #print(output._root_object)
-#    # print(template.getPage(0)['/Annots'][34].getObject())
+    #print(output._root_object)
+    print(template.getPage(1)['/Annots'][74].getObject())
     
-#     output.cloneReaderDocumentRoot(template)
+    output.cloneReaderDocumentRoot(template)
     
-#     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
-#     outputStream=open("NewPDF.pdf", "wb")
-#     output.write(outputStream)
-# test()
+    output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
+    outputStream=open("NewPDF.pdf", "wb")
+    output.write(outputStream)
+#test()
 
+#proposed salary original rectangle: [364.948, 465.105, 424.345, 484.927]
+#monthly page 2 original rectangle:[435.202, 697.896, 575.439, 710.933]

@@ -33,7 +33,7 @@ def format_course(course):
 
 #formats courses into groups by quarters with formatting between each quarter of courses
 def format_courses_by_quarter(lecturer):
-    all_courses=[]
+    all_courses=["\t",]
     if lecturer.F_courses!=[]:
         c= "".join(str(format_course(course)+",\n\t\t\t\t") for course in lecturer.F_courses)
         courses=c[:-6]+c[-5:]
@@ -77,8 +77,12 @@ def write_letter(lecturer, AY):
     #iterates through start dates to format data for letter
     for s_date in lecturer.start:
             start_end= lecturer.start[i]+" - "+lecturer.end[i]
-            annual=lecturer.annual[0]
-            monthly=lecturer.monthly[0]
+            try:
+                annual="{:,}".format(lecturer.annual[0])
+                monthly="{:,.2f}".format(lecturer.monthly[0])
+            except:
+                annual=lecturer.annual[0]
+                monthly=lecturer.monthly[0]
             #accounts for multiple start dates
             if i== 1:
                 start_end= ", "+start_end
@@ -96,7 +100,7 @@ def write_letter(lecturer, AY):
     #dictionary to iterage through RegEx on template
     data={"<Date>":str(letter_date) ,"<Name>":lecturer.first_name+" "+lecturer.last_name, 
           "<Title Code>": job_code, "<start to end>": dates, 
-          "<percentage>":lecturer.percentage, "<annual>":"{:,}".format(annual), "<monthly>": "{:,.2f}".format(monthly),
+          "<percentage>":lecturer.percentage, "<annual>":annual, "<monthly>": monthly,
           "<List of Classes & Course Titles>": courses, "\n\n": '\n', "<AY>":AY}
     #replace keywords with formatted data
     for key in data:

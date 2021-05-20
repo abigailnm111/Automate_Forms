@@ -13,6 +13,7 @@ import re
 import os
 from math import ceil
 
+
 import write_pre_offer as offer
 import pdf_filler
 
@@ -33,7 +34,7 @@ def get_courseloads(file):
 #reads courseload spreadsheet to create list of data for each employee
 class Faculty:
     def __init__(self, year_assign, row, cont_range, pre_range):
-                self.action_type=["Reappointment"] 
+                self.action_type=[] 
                 self.warnings=[]
                 
                 row=str(row+1)
@@ -94,18 +95,23 @@ class Faculty:
             if self.quarters== 3:
                 self.start= ["7/1/"+ str(year)]
                 self.end=["6/30/"+str(year+1)]
+                self.break_service=False
             if self.quarters==2:
                 if self.F_courses != []:
                     if self.S_courses !=[]:
                         self.start= ["10/1/"+str(year), "4/1/"+ str(year+1)]
                         self.end=["12/31/"+str(year+1), "6/30/"+str(year+1)]
+                        self.break_service=True
                     else:
                         self.start= ["10/1/"+ str(year)]
                         self.end= ["3/30/"+str(year+1)]
+                        self.break_service=False
                 elif self.W_courses != []:
                     self.start= ["1/1/"+ str(year+1)]
                     self.end= ["6/30/"+str(year+1)]
+                    self.break_service=False
             if self.quarters==1:
+                self.break_service=False
                 if self.F_courses !=[]:
                     self.start=["10/1/"+str(year)]
                     self.end= ["12/31/"+str(year)]
@@ -327,7 +333,7 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                     lecturer.action_type[0]= ("Reappointment Range Adjustment "+str(increase)+"%")
                 lecturer.get_last_value_in_history(a_sheet, base_salary, cell.row, increase)
                 total_quarters= lecturer.HRquarters+lecturer.quarters
-                
+                lecturer.action_type.append('Reppointment')
                 
                 
                 ##checks for 9th quarter to alert user- no affect on documents
@@ -344,6 +350,7 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                     lecturer.pre6_milestone_check(AY, 19, "Initial Continuing Appointment")    
             else:
                 lecturer.set_starting_data(base_salary)
+                lecturer.action_type.append("Appointment")
                 
             
                     
@@ -358,24 +365,24 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                 a_sheet.cell(row=cell.row+i,column=3).value=lecturer.end[i]
                 #accounts for a F/S appointment with a break 
                 if len(lecturer.start)>1:
-                   
+                   adjusted_HRquarters=lecturer.HRquarters
                    if ("10/1" in lecturer.start[i]) or( "7/1" in lecturer.start[i]):  
                        a_sheet.cell(row=cell.row+i,column=5).value="x"
-                       lecturer.HRquarters+=1
+                       adjusted_HRquarters+=1
                        if (lecturer.W_courses!=[]) and ("1/1" not in lecturer.start[i+1]):
                            a_sheet.cell(row=cell.row+i,column=6).value= "x"
-                           lecturer.HRquarters+=1
+                           adjusted_HRquarters+=1
                    if ("11/1/" in lecturer.start[i]) or ("1/1/" in lecturer.start[i]):
                        a_sheet.cell(row=cell.row+i,column=6).value= "x"
-                       lecturer.HRquarters+=1
+                       adjusted_HRquarters+=1
                        if (lecturer.S_courses !=[]) and (i== len(lecturer.start)-1):
                            a_sheet.cell(row=cell.row+i,column=7).value= "x"
-                           lecturer.HRquarters+=1                        
+                           adjusted_HRquarters+=1                        
                    if ("4/1" in lecturer.start[i] )or ("3/1" in lecturer.start[i]):
                        a_sheet.cell(row=cell.row+i,column=7).value= "x"
-                       lecturer.HRquarters+=1
-                   a_sheet.cell(row=cell.row+i,column=8).value=lecturer.HRquarters
-                   a_sheet.cell(row=cell.row+i,column=9).value= (lecturer.HRquarters)/3
+                       adjusted_HRquarters+=1
+                   a_sheet.cell(row=cell.row+i,column=8).value=adjusted_HRquarters
+                   a_sheet.cell(row=cell.row+i,column=9).value= (adjusted_HRquarters)/3
                 #all other single quarter or continuious appointments
                
                 else:
