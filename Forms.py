@@ -14,7 +14,7 @@ import os
 from math import ceil
 
 
-import write_pre_offer as offer
+import write_offer as offer
 import pdf_filler
 
 #############################################################
@@ -478,7 +478,9 @@ def main():
         a_sheet=wp.active
         update_history_record(faculty, a_sheet, dept.AY, dept.base_salary, HR, dept.RA)
         offer.write_letter(faculty, dept.AY)
-        pdf_filler.fill_form(faculty, dept.AY, HR, dept)
+        if (1630 in faculty.job_code) or (1632 in faculty.job_code):
+            
+            pdf_filler.fill_form(faculty, dept.AY, HR, dept)
         
         for warning in faculty.warnings:
             print (warning)

@@ -76,6 +76,7 @@ def write_letter(lecturer, AY):
     dates=' '
     #iterates through start dates to format data for letter
     for s_date in lecturer.start:
+            
             start_end= lecturer.start[i]+" - "+lecturer.end[i]
             try:
                 annual="{:,}".format(lecturer.annual[0])
@@ -87,8 +88,10 @@ def write_letter(lecturer, AY):
             if i== 1:
                 start_end= ", "+start_end
                 #if lecturer goes from one job code to another (initial continuing or sr.), it will not add second start date
-                if len(job_code)==1:
+                if len(lecturer.job_code)==1:
+                    
                     if len(lecturer.annual)>1:
+                        
                         if lecturer.annual[1]== "ATTENTION":
                             annual= annual+", "+lecturer.start[i]+': '+lecturer.annual[1]  
                             monthly=monthly+", "+lecturer.start[i]+': '+lecturer.monthly[1]   
@@ -97,11 +100,17 @@ def write_letter(lecturer, AY):
             dates= dates+start_end
             i+=1
             job_code=str(lecturer.job_code[0])
+    if job_code=='1630' or job_code=='1632':
+        
     #dictionary to iterage through RegEx on template
-    data={"<Date>":str(letter_date) ,"<Name>":lecturer.first_name+" "+lecturer.last_name, 
-          "<Title Code>": job_code, "<start to end>": dates, 
-          "<percentage>":lecturer.percentage, "<annual>":annual, "<monthly>": monthly,
-          "<List of Classes & Course Titles>": courses, "\n\n": '\n', "<AY>":AY}
+        data={"<Date>":str(letter_date) ,"<Name>":lecturer.first_name+" "+lecturer.last_name, 
+              "<Title Code>": job_code, "<start to end>": dates, 
+              "<percentage>":lecturer.percentage, "<annual>":annual, "<monthly>": monthly,
+              "<List of Classes & Course Titles>": courses, "\n\n": '\n', "<AY>":AY}
+    else:
+        data={"<Date>":str(letter_date) ,"<Name>":lecturer.first_name+" "+lecturer.last_name, 
+              "<percentage>":lecturer.percentage, "<annual>":annual, "<monthly>": monthly,
+              "<List of Classes & Course Titles>": courses, "\n\n": '\n', "<AY>":AY}     
     #replace keywords with formatted data
     for key in data:
         template=re.sub(key, data[key] , template)
