@@ -477,7 +477,8 @@ def main():
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
         update_history_record(faculty, a_sheet, dept.AY, dept.base_salary, HR, dept.RA)
-        offer.write_letter(faculty, dept.AY)
+        for job_code in faculty.job_code:
+            offer.write_letter(faculty, dept.AY, job_code)
         if (1630 in faculty.job_code) or (1632 in faculty.job_code):
             
             pdf_filler.fill_form(faculty, dept.AY, HR, dept)
