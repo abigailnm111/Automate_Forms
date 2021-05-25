@@ -91,16 +91,16 @@ def form_dicts(lecturer,AY,HR,dept):
         title_text="1632, LECTURER 9/9"
     elif lecturer.job_code==[1640]:
         title_id=3
-        title_text="1640, SENIOR LECTURER 9/12"
+        title_text="1641,SR CONTINUING LECTURER 9/12"
     elif lecturer.job_code== [1642]:
         title_id=4
-        title_text='1642, SENIOR LECTURER 9/9'
+        title_text='1643,SR CONTINUING LECTURER 9/9'
     elif lecturer.job_code==[1631]:
-        title_id=5
-        title_text="1631, CONT LECTURER 9/12"
+        title_id=1
+        title_text="1631,CONTINUING LECTURER 9/12"
     else:
-        title_id=6
-        title_text="1633, CONT LECTURER 9/9"
+        title_id=2
+        title_text="1633,CONTINUING LECTURER 9/9"
         
 
     employee_dict={
@@ -136,7 +136,7 @@ def form_dicts(lecturer,AY,HR,dept):
             
             # visa_current
             #'uid_p2':'12345678',
-             'dept_code_p2': dept.code,
+            'dept_code_p2': dept.code,
             'mo_salary_rate_p2':prop_mo,
             
          
@@ -172,6 +172,11 @@ def form_dicts(lecturer,AY,HR,dept):
     choice_dict={
         'proposed_title_p1':[title_id,title_text],
         }
+    if lecturer.status== ['sr'] or lecturer.status== ['cont']:
+        
+        choice_dict['present_title_p1']=[title_id, title_text]
+        radio_dict['annual_notice_p2']="/Yes"
+        
     
     return employee_dict, radio_dict, choice_dict
 
@@ -189,7 +194,10 @@ def add_comment(output,page,text, rectangle):
 def write_form(lecturer,employee_dict, radio_dict, choice_dict):
 
     output=PdfFileWriter()
-    template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+    if lecturer.job_code==[1630] or lecturer.job_code==[1632]:
+        template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+    else:
+        template=PdfFileReader(open("CL_Data_Summary_form.pdf", 'rb'))
 
     output.cloneReaderDocumentRoot(template)
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
@@ -213,7 +221,9 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                 #dropdowns:changes "I" to index of option chosen ex: second option on list is "1"
                 #"V" is the text of the field. Both V and I must be updated
                 for field in choice_dict:
+                  #  print(lecturer.last_name, field)
                     if writer_annot.get("/T")==field:
+                        
                         writer_annot.update({
                                 NameObject("/I"):NameObject(choice_dict[field][0]),
                                 NameObject("/V"):TextStringObject(choice_dict[field][1])
@@ -224,9 +234,15 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                 for field in radio_dict:
                     if "/Parent" in writer_annot:
                         if writer_annot["/Parent"].get("/T") == field:
+                            print(lecturer.last_name, field)
                             writer_annot.update({
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
+                    elif writer_annot.get("/T")==field:
+                         print (lecturer.last_name, field)
+                         writer_annot.update({
+                            NameObject("/V"):NameObject(radio_dict[field]),
+                            NameObject("/AS"):NameObject(radio_dict[field])})
         if i==0:
             if len(lecturer.start)==2 and (lecturer.break_service==True): # if there are two start dates and it's the first page
                  start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
@@ -248,25 +264,81 @@ def fill_form(lecturer,AY,HR,dept):
 def test():
     
     output=PdfFileWriter()
-    template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+    template=PdfFileReader(open("Heron.Cady_form.pdf", 'rb'))
     fields=template.getFields()
-    
-    page=template.getPage(1)
+    #for field in fields:
+        #print(field)
+    page=template.getPage(0)
     for j in range(0, len(page['/Annots'])):
                 writer_annot = page['/Annots'][j].getObject()
-              #  print(writer_annot)
+                print(writer_annot)
     
      
     
     #print(output._root_object)
-    print(template.getPage(1)['/Annots'][74].getObject())
+    #print(template.getPage(1)['/Annots'][74].getObject())
     
     output.cloneReaderDocumentRoot(template)
     
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
     outputStream=open("NewPDF.pdf", "wb")
     output.write(outputStream)
-#test()
+test()
 
-#proposed salary original rectangle: [364.948, 465.105, 424.345, 484.927]
-#monthly page 2 original rectangle:[435.202, 697.896, 575.439, 710.933]
+#{'/AP': {'/D': {'/Off': IndirectObject(22, 0), '/Yes': IndirectObject(21, 0)}, '/N': {'/Off': IndirectObject(24, 0), '/Yes': IndirectObject(23, 0)}}, '/AS': '/Off', '/BS': {'/S': '/I', '/W': 1}, '/DA': '/ZaDb 14 Tf 0 g', '/F': 4, '/FT': '/Btn', '/MK': {'/BC': [0], '/BG': [1], '/CA': '4'}, '/P': IndirectObject(1, 0), '/Rect': [32.2339, 664.372, 48.3508, 679.617], '/Subtype': '/Widget', '/T': 'annual_notice_p2', '/Type': '/Annot'}
+
+# uid_p2
+# mo_salary_rate_p2 same
+# dept_code_p2 same
+# assign_revision_p2
+# assign_rev_percent_p2
+# fall_percent_p2 same
+# avg_percent_p2 same
+#
+
+# other_inst_percent
+# yes
+# other_state_inst_p2
+# no
+# name_inst_p2
+# add_comments_p2
+# dept_contact_name
+# dept_approval_typed
+# dept_ext
+# dept_contact_date
+# dept_approval_date
+
+
+
+
+# present_salary
+# proposed_salary_p1
+# present_percent_p1
+# proposed_percent_p1
+# present_add_comment_p1
+# begin_date_p1
+# end_date_p1
+# bio_data_note
+# degree1_p1
+# date1_p1
+# inst1_p1
+# degree2_p1
+# date2_p1
+# inst2_p1
+# degree3_p1
+# date3_p1
+# inst3_p1
+# degree4_p1
+# date4_p1
+# inst4_p1
+# dean_final_p1
+# dean_action_p1
+# dean_date_p1
+# dean_name_p1
+
+# pre_six_year_appointment
+# pre_six_year_merit
+# pre_six_year_reappointment
+# pre_six_year_4th_year_increase
+# revision
+# dept_approval

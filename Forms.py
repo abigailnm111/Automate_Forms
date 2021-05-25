@@ -212,7 +212,8 @@ class Faculty:
                 if (self.HRquarters+i)==q_check:
                     self.action_type.insert(0,action)
                     self.annual= ["ATTENTION"]
-                    self.monthly= ["ATTENTION"]                  
+                    self.monthly= ["ATTENTION"]       
+                    
                     return 
                 else:
                     i+=1
@@ -224,6 +225,7 @@ class Faculty:
                     if q_check==19:
                         self.job_code.append("1631")
                         self.title.append("Continuing Lecturer")
+                        
                 else:
                     if ("1/1/"+str(int(AY)+1)) not in self.start:
                         self.start.append("1/1/"+str(int(AY)+1))
@@ -231,6 +233,7 @@ class Faculty:
                         if q_check==19:
                             self.job_code.append("1633")
                             self.title.append("Continuing Lecturer")
+                            
             else:
                 
                 if self.quarters==3:
@@ -240,6 +243,7 @@ class Faculty:
                     if q_check==19:
                         self.job_code.append("1631")
                         self.title.append("Continuing Lecturer")
+                        
                 else:
                     
                             
@@ -250,6 +254,7 @@ class Faculty:
                         if q_check==19:
                             self.title.append("Continuing Lecturer")
                             self.job_code.append("1633")
+                            
             if len(self.start)>1:
                 self.action_type.append(action)
                 self.annual.append("ATTENTION")
@@ -334,16 +339,17 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                 lecturer.get_last_value_in_history(a_sheet, base_salary, cell.row, increase)
                 total_quarters= lecturer.HRquarters+lecturer.quarters
                 lecturer.action_type.append('Reppointment')
-                
+                lecturer.promo_flag=""
                 
                 ##checks for 9th quarter to alert user- no affect on documents
                 if 9 in range(lecturer.HRquarters+1,total_quarters+1):
                     lecturer.warnings.append(lecturer.last_name+":9th quarter warning- check for 9th quarter mentoring meeting")
-                
+                    lecturer.promo_flat=""
                 #checks for Pre 6 miles stones that require additional action. Does not input salary into documents and alerts User.
                 if 10 in range(lecturer.HRquarters+1,total_quarters+1):
                     lecturer.warnings.append(lecturer.last_name+":10th quarter warning- check for 10th quarter increase")
                     lecturer.pre6_milestone_check(AY, 10, "10th Quarter Increase")
+                    
                     
                 if 19 in range(lecturer.HRquarters+1,total_quarters+1):
                     lecturer.warnings.append(lecturer.last_name+":19th quarter warning- check for Continuing Appointment")
@@ -351,7 +357,7 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
             else:
                 lecturer.set_starting_data(base_salary)
                 lecturer.action_type.append("Appointment")
-                
+                lecturer.promo_flat=''
             
                     
             i=0
@@ -477,11 +483,11 @@ def main():
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
         update_history_record(faculty, a_sheet, dept.AY, dept.base_salary, HR, dept.RA)
-        for job_code in faculty.job_code:
-            offer.write_letter(faculty, dept.AY, job_code)
-        if (1630 in faculty.job_code) or (1632 in faculty.job_code):
+        
+        offer.write_letter(faculty, dept.AY)
+        
             
-            pdf_filler.fill_form(faculty, dept.AY, HR, dept)
+        pdf_filler.fill_form(faculty, dept.AY, HR, dept)
         
         for warning in faculty.warnings:
             print (warning)
