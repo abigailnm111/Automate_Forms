@@ -10,12 +10,8 @@ import re
 from docx import Document, shared
 import docx2txt
 
-#pre_template= docx2txt.process('Pre6-letter-template.docx')
-    #template for continuing lecturers
-#cont_template=docx2txt.process('12_CL_yearly_assign_letter.docx')
 
-#print(cont_template)
-
+#get today's date for letter date
 today= date.today()
 letter_date= today.strftime("%B %d, %Y")
 
@@ -54,6 +50,7 @@ def format_courses_by_quarter(lecturer):
     courses= "".join(str(quarter) for quarter in all_courses)
     return courses
 
+#writes information to the letter template 
 def write_letter(lecturer, AY):
     #template for pre 6 lecturers
     pre_template= docx2txt.process('Pre6-letter-template.docx')
@@ -120,4 +117,4 @@ def write_letter(lecturer, AY):
     font=style.font
     font.name=  "Garamond"
     font.size= shared.Pt(11)
-    new_doc.save(AY+lecturer.last_name+"_"+lecturer.first_name+'.docx')
+    new_doc.save(lecturer.last_name+"_"+lecturer.first_name+"_"+AY+'.docx')

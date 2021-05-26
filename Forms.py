@@ -12,8 +12,9 @@ import openpyxl
 import re
 import os
 from math import ceil
+from calendar import monthrange
 
-
+#my modules
 import write_offer as offer
 import pdf_filler
 
@@ -30,7 +31,7 @@ def get_courseloads(file):
     return year_assign
 
 
-#assign cells to variables by line
+
 #reads courseload spreadsheet to create list of data for each employee
 class Faculty:
     def __init__(self, year_assign, row, cont_range, pre_range):
@@ -77,7 +78,7 @@ class Faculty:
                 else:
                     self.S_courses=[]
                     
- #counts the number of active courses for the year 
+#counts the number of active quarters for the year 
     def get_quarters(self):  
         self.quarters=0
         if self.F_courses != []:
@@ -159,6 +160,20 @@ class Faculty:
             self.title= ["Senior Continuing Lecturer"]
         return self.job_code, self.title
     
+    def get_UID(self,a_sheet):
+        
+        header=(a_sheet.HeaderFooter.oddHeader.left.text)
+        try:
+            UID=re.search("[0-9]{9}", header)
+            self.UID=UID.group()
+        except:
+            self.UID=""
+        if self.UID==None:
+            self.UID=""
+        
+        
+    #get history information from their existing history record
+    #this will partially determine new status/data
     def get_last_value_in_history(self,sheet, base_salary, empty_row, increase):
         i=0
         for column in ["H","J", "O","M", "A"]:
@@ -197,15 +212,12 @@ class Faculty:
                     self.hr_salary=self.annual[0]
                 self.monthly= [self.annual[0]/self.mo_paid_over]
             elif i==3:
-                self.hr_percentage= q
-                
+                self.hr_percentage= str(q*100)+'%'
 
-                
-            
             
             i+=1
         return self.HRquarters, self.annual, self.monthly
-       
+    #checks if there is an appointment changing milestone occuring over the year (9th, 10th and 18th quarters)
     def pre6_milestone_check(self, AY, q_check, action):
             i=1
             if self.F_courses!=[] and (self.HRquarters+i)<=q_check:
@@ -238,15 +250,15 @@ class Faculty:
                 
                 if self.quarters==3:
                     self.start.append("3/1"+str(int(AY)+1))
-                    self.end.insert(0, "2/28/"+str(int(AY)+1)) 
-                    self.warnings.append(self.last_name+": End date set to 2/28.Check leap year end date")
+                    feb_days=monthrange(int(AY)+1,2)
+                    self.end.insert(0,"2/"+str(feb_days[1])+"/"+str(int(AY)+1)  )
+                   # self.warnings.append(self.last_name+": End date set to 2/28.Check leap year end date")
                     if q_check==19:
                         self.job_code.append("1631")
                         self.title.append("Continuing Lecturer")
                         
                 else:
-                    
-                            
+   
                     if ("4/1/"+str(int(AY)+1)) not in self.start:
                         
                         self.start.append("4/1/"+str(int(AY)+1))
@@ -264,7 +276,7 @@ class Faculty:
                 self.annual= ["ATTENTION"]
                 self.monthly= ["ATTENTION"]
             return self.start, self.end
-        
+        #gets the names of the quarters from the list of course titles based on the course number in the courseload
     def get_course_names(self, quarter):      
         course_titles=open(course_list,'r')
         course_dict=[]
@@ -285,7 +297,7 @@ class Faculty:
                    course_title_list.append(title[0]+" "+course_title.group())
             i+=1
         return course_title_list    
-    
+    #sets standard data if someone is new/does not have an existing history record
     def set_starting_data(self, base_salary):
         self.HRquarters=0
         self.status=["pre"]
@@ -296,7 +308,7 @@ class Faculty:
         self.hr_percentage=''
         self.hr_salary=0
    
-
+#separates the courseload spreadsheet by rank
 def get_rank_ranges(year_assign):
     for row in year_assign.rows:
         if row[0].value=="CONTINUING":
@@ -316,7 +328,8 @@ def get_rank_ranges(year_assign):
 
 ####Get quarter count from prior History Record
 
-
+#makes a copy of an exisiting history record (or creates a new one if it does not exist) and adds a new line based
+#on the courseload and existing history information
 def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
     #adds name to History Record Header if Template used
     if HR== "new":
@@ -333,13 +346,14 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
             lecturer.get_quarters(), lecturer.get_start_end_date(AY)
             #gets pre-exisiting History Record information unless template is used
           
+            #if not a new employee, checks for milstones gets history information and applies RA if applicable
             if HR!="new":
                 if increase>0:
                     lecturer.action_type[0]= ("Reappointment Range Adjustment "+str(increase)+"%")
                 lecturer.get_last_value_in_history(a_sheet, base_salary, cell.row, increase)
                 total_quarters= lecturer.HRquarters+lecturer.quarters
                 lecturer.action_type.append('Reppointment')
-                lecturer.promo_flag=""
+                
                 
                 ##checks for 9th quarter to alert user- no affect on documents
                 if 9 in range(lecturer.HRquarters+1,total_quarters+1):
@@ -354,24 +368,23 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                 if 19 in range(lecturer.HRquarters+1,total_quarters+1):
                     lecturer.warnings.append(lecturer.last_name+":19th quarter warning- check for Continuing Appointment")
                     lecturer.pre6_milestone_check(AY, 19, "Initial Continuing Appointment")    
+            #if a new employee sets standard starting data
             else:
                 lecturer.set_starting_data(base_salary)
                 lecturer.action_type.append("Appointment")
-                lecturer.promo_flat=''
+                
             
-                    
+            #fills in active quarter information based on course assignments and start dates.
+            #multiple start dates (either for break in service or rate change) calls for an additonal line
             i=0
+            adjusted_HRquarters=lecturer.HRquarters
             for start in lecturer.start:
-                
-                
-                ##checks for 9th quarter to alert user- no affect on documents
-                
-                
+
                 a_sheet.cell(row=cell.row+i, column=2).value=lecturer.start[i]
                 a_sheet.cell(row=cell.row+i,column=3).value=lecturer.end[i]
                 #accounts for a F/S appointment with a break 
                 if len(lecturer.start)>1:
-                   adjusted_HRquarters=lecturer.HRquarters
+                   
                    if ("10/1" in lecturer.start[i]) or( "7/1" in lecturer.start[i]):  
                        a_sheet.cell(row=cell.row+i,column=5).value="x"
                        adjusted_HRquarters+=1
@@ -402,9 +415,8 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
                         a_sheet.cell(row=cell.row+i,column=7).value= "x"
                     a_sheet.cell(row=cell.row+i,column=8).value=lecturer.HRquarters+lecturer.quarters
                     a_sheet.cell(row=cell.row+i,column=9).value= (lecturer.HRquarters+lecturer.quarters)/3
-                
-                
-               
+                    
+                #fills in salary and action type information based on number of start dates
                 if len(lecturer.action_type)==1:
                     
                     a_sheet.cell(row=cell.row+i,column=12).value=lecturer.action_type[0]
@@ -429,14 +441,14 @@ def update_history_record(lecturer, a_sheet,AY, base_salary, HR, increase):
             break
         
   ################################################     
-#read document and replace key words
+
 
 def get_first_empty_cell(ws,column):
     for cell in ws[column]:
         if cell.value is None:
             
             return cell.row
-#write document
+#get basic department information to be used on all employees
 class DeptData:
     
     def __init__(self,dept_file):
@@ -450,6 +462,7 @@ class DeptData:
         self.contact_ext=data["B6"].value
         self.FAU=data["B7"].value
         self.name=data["B8"].value
+        self.approver=data["B9"].value
 
 def main():
     
@@ -474,22 +487,24 @@ def main():
             wp=openpyxl.load_workbook(HR_file)
             dest_filename= os.path.join(location, faculty.last_name+"." +faculty.first_name+".xlsx")
             HR=""
+            
         except:
             wp=openpyxl.load_workbook(HR_template)
             dest_filename= os.path.join(location, "2_History_Record_template.xlsx")
             HR="new"
-            
+       
             
         wp=openpyxl.load_workbook(dest_filename)
         a_sheet=wp.active
+        faculty.get_UID(a_sheet)
         update_history_record(faculty, a_sheet, dept.AY, dept.base_salary, HR, dept.RA)
-        
+        #calls letter writing module
         offer.write_letter(faculty, dept.AY)
-        
-            
+        #calls form filling module
         pdf_filler.fill_form(faculty, dept.AY, HR, dept)
-        
+        #some elements, like raises cannot be calculated automatically, and/or requires additional action
+        #alerts the user if something needs to be double checked
         for warning in faculty.warnings:
             print (warning)
-        wp.save(os.path.join(location, dept.AY+faculty.last_name+"." +faculty.first_name+".xlsx"))
+        wp.save(os.path.join(location, faculty.last_name+"." +faculty.first_name+"_"+dept.AY+".xlsx"))
 main()

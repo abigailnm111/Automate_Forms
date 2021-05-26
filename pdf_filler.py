@@ -102,9 +102,9 @@ def form_dicts(lecturer,AY,HR,dept):
         title_id=2
         title_text="1633,CONTINUING LECTURER 9/9"
         
-
+#basic form fields
     employee_dict={
-            
+            #page1
             'name_p1':lecturer.last_name+", "+lecturer.first_name,
             'dept_p1': dept.name,
             'accrued_qtr':lecturer.HRquarters, 
@@ -118,68 +118,45 @@ def form_dicts(lecturer,AY,HR,dept):
             'present_add_comment_p1':'',
             'begin_date_p1':lecturer.start[0],
             'end_date_p1':end_date,
-            # bio_data_note
-            # degree1_p1
-            # date1_p1
-            # inst1_p1
-            # degree2_p1
-            # date2_p1
-            # inst2_p1
-            # degree3_p1
-            # date3_p1
-            # inst3_p1
-            # degree4_p1
-            # date4_p1
-            # inst4_p1
-            
-            # other_state_inst_p2
-            
-            # visa_current
-            #'uid_p2':'12345678',
+            #page2
+            'uid_p2':lecturer.UID,
             'dept_code_p2': dept.code,
             'mo_salary_rate_p2':prop_mo,
             
          
             'avg_percent_p2':lecturer.percentage,
             'fund_source_p2':dept.FAU,
-            # phd_cert
-            # yes
-            # no
-            # name_inst_p2
-            # other_inst_percent
-            # type_of_visa
+
             'dept_contact_name':dept.contact_name,
             'dept_ext':dept.contact_ext,
-            'dept_contact_date':present_date
-            
-            # add_comments_p2
-            
-            # visa_beg date
-            # visa_end date
-            # JPF_EXR
-            
-                
+            'dept_contact_date':present_date,
+            'dept_approval_typed':dept.approver,
+   
             }
-    
+    #adds course information to dictionary
     employee_dict.update(course_dict)
     
+    #dictionary for radio buttons/checkboxes
     radio_dict={
         'type_increase': type_increase,#'/4th_year' or '/merit' or '/Off'
         'type_review_p1':type_review #'/appt' or '/reappt'
                 
         }
-
+    #dictionary for dropdowns
     choice_dict={
         'proposed_title_p1':[title_id,title_text],
         }
+    #Continuing lecturer form has some additional fields and radio buttons change name
     if lecturer.status== ['sr'] or lecturer.status== ['cont']:
         
         choice_dict['present_title_p1']=[title_id, title_text]
+        radio_dict['pre_six_year_reappointment']="/Yes"
         radio_dict['annual_notice_p2']="/Yes"
         
     
     return employee_dict, radio_dict, choice_dict
 
+#accounts for multiple start dates and salaries by adding a comment box next to original field form
 def add_comment(output,page,text, rectangle):
     obj=output._addObject(DictionaryObject({ NameObject('/DA'):TextStringObject(' /Helv 10 Tf'),
                      NameObject('/Subtype'):NameObject('/FreeText'),
@@ -190,31 +167,27 @@ def add_comment(output,page,text, rectangle):
                      
                      } ))
     page['/Annots'].append(obj)
-    
+ 
+#crates form and fills out the fields using dictionaries    
 def write_form(lecturer,employee_dict, radio_dict, choice_dict):
 
     output=PdfFileWriter()
-    if lecturer.job_code==[1630] or lecturer.job_code==[1632]:
-        template=PdfFileReader(open("1_Pre6_form.pdf", 'rb'))
+    if lecturer.job_code[0]==1630 or lecturer.job_code[0]==1632:
+        template=PdfFileReader(open("Pre6_Data_Summary__Redacted.pdf", 'rb'))
+        filename= lecturer.last_name+"."+lecturer.first_name+"_form.pdf"
     else:
-        template=PdfFileReader(open("CL_Data_Summary_form.pdf", 'rb'))
-
+        template=PdfFileReader(open("CL_Data_Summary_form_Redacted.pdf", 'rb'))
+        filename= lecturer.last_name+"."+lecturer.first_name+"_Cont_form.pdf"
     output.cloneReaderDocumentRoot(template)
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
     
-    
-        
     for i in [0,1]:
         
         output.updatePageFormFieldValues(template.getPage(i), employee_dict)
-        
-        
-        #Checkboxes and drop downs:From PyPDF Library for updatePageFormFieldValues but edited for NameObject as value 
-        
+
         page=template.getPage(i)
-        
-        
-        
+ 
+        #Checkboxes and drop downs:From PyPDF Library for updatePageFormFieldValues but edited for NameObject as value
         for j in range(0, len(page['/Annots'])):
                 writer_annot = page['/Annots'][j].getObject()   
                 
@@ -234,29 +207,31 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                 for field in radio_dict:
                     if "/Parent" in writer_annot:
                         if writer_annot["/Parent"].get("/T") == field:
-                            print(lecturer.last_name, field)
+                            
                             writer_annot.update({
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
                     elif writer_annot.get("/T")==field:
-                         print (lecturer.last_name, field)
+                         
                          writer_annot.update({
                             NameObject("/V"):NameObject(radio_dict[field]),
                             NameObject("/AS"):NameObject(radio_dict[field])})
         if i==0:
-            if len(lecturer.start)==2 and (lecturer.break_service==True): # if there are two start dates and it's the first page
+            # if there are two start dates and it's the first page add second set of dates to the proposed dates
+            if len(lecturer.start)==2 and (lecturer.break_service==True): 
                  start_end_2= lecturer.start[1]+"-"+lecturer.end[1]
                  add_comment(output,page, start_end_2, [379.051, 405.913, 536.515, 424.313])
+            #if they are eligible for a raise in the middle of the year add a line for a second monthly/annual(pg1 and pg2)
             if len(lecturer.annual)==2:
                 add_comment(output,page,lecturer.start[1]+": "+lecturer.annual[1],[457.783, 465.165, 582.78, 483.565])
         if i==1:
             if len(lecturer.monthly)==2:
                    add_comment(output, page, lecturer.start[1]+": "+lecturer.monthly[1], [440.738, 679.446, 548.738, 697.846])
  
-    outputStream=open(lecturer.last_name+"."+lecturer.first_name+"_form.pdf", "wb")
+    outputStream=open(filename, "wb")
     output.write(outputStream)
    
-
+#main function to call from main file 
 def fill_form(lecturer,AY,HR,dept):
     employee_dict,radio_dict, choice_dict=form_dicts(lecturer,AY,HR,dept)
     write_form(lecturer, employee_dict, radio_dict, choice_dict)
@@ -283,62 +258,5 @@ def test():
     output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
     outputStream=open("NewPDF.pdf", "wb")
     output.write(outputStream)
-test()
+#test()
 
-#{'/AP': {'/D': {'/Off': IndirectObject(22, 0), '/Yes': IndirectObject(21, 0)}, '/N': {'/Off': IndirectObject(24, 0), '/Yes': IndirectObject(23, 0)}}, '/AS': '/Off', '/BS': {'/S': '/I', '/W': 1}, '/DA': '/ZaDb 14 Tf 0 g', '/F': 4, '/FT': '/Btn', '/MK': {'/BC': [0], '/BG': [1], '/CA': '4'}, '/P': IndirectObject(1, 0), '/Rect': [32.2339, 664.372, 48.3508, 679.617], '/Subtype': '/Widget', '/T': 'annual_notice_p2', '/Type': '/Annot'}
-
-# uid_p2
-# mo_salary_rate_p2 same
-# dept_code_p2 same
-# assign_revision_p2
-# assign_rev_percent_p2
-# fall_percent_p2 same
-# avg_percent_p2 same
-#
-
-# other_inst_percent
-# yes
-# other_state_inst_p2
-# no
-# name_inst_p2
-# add_comments_p2
-# dept_contact_name
-# dept_approval_typed
-# dept_ext
-# dept_contact_date
-# dept_approval_date
-
-
-
-
-# present_salary
-# proposed_salary_p1
-# present_percent_p1
-# proposed_percent_p1
-# present_add_comment_p1
-# begin_date_p1
-# end_date_p1
-# bio_data_note
-# degree1_p1
-# date1_p1
-# inst1_p1
-# degree2_p1
-# date2_p1
-# inst2_p1
-# degree3_p1
-# date3_p1
-# inst3_p1
-# degree4_p1
-# date4_p1
-# inst4_p1
-# dean_final_p1
-# dean_action_p1
-# dean_date_p1
-# dean_name_p1
-
-# pre_six_year_appointment
-# pre_six_year_merit
-# pre_six_year_reappointment
-# pre_six_year_4th_year_increase
-# revision
-# dept_approval
