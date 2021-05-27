@@ -55,7 +55,7 @@ def write_letter(lecturer, AY):
     #template for pre 6 lecturers
     pre_template= docx2txt.process('Pre6-letter-template.docx')
     #template for continuing lecturers
-    cont_template=docx2txt.process('12_CL_yearly_assign_letter.docx')
+    cont_template=docx2txt.process('CL_yearly_assign_letter.docx')
     
     #letterhead for letters
     new_doc=Document('Letterhead.docx')

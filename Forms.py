@@ -249,7 +249,7 @@ class Faculty:
             else:
                 
                 if self.quarters==3:
-                    self.start.append("3/1"+str(int(AY)+1))
+                    self.start.append("3/1/"+str(int(AY)+1))
                     feb_days=monthrange(int(AY)+1,2)
                     self.end.insert(0,"2/"+str(feb_days[1])+"/"+str(int(AY)+1)  )
                    # self.warnings.append(self.last_name+": End date set to 2/28.Check leap year end date")
@@ -482,7 +482,7 @@ def main():
     for faculty in all_lec: 
         
         HR_file= os.path.join(location, faculty.last_name+"."+faculty.first_name+".xlsx" )
-        HR_template= os.path.join(location, "2_History_Record_template.xlsx" )
+        HR_template= os.path.join(location, "History_Record_template.xlsx" )
         try:
             wp=openpyxl.load_workbook(HR_file)
             dest_filename= os.path.join(location, faculty.last_name+"." +faculty.first_name+".xlsx")

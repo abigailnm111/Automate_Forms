@@ -5,7 +5,7 @@ Created on Sun May  2 21:33:27 2021
 
 @author: panda
 """
-from PyPDF2.generic import NameObject, BooleanObject, TextStringObject, IndirectObject, DictionaryObject, ArrayObject,RectangleObject, FloatObject
+from PyPDF2.generic import NameObject, BooleanObject, TextStringObject,  DictionaryObject, ArrayObject,RectangleObject, FloatObject
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from datetime import date
 
@@ -202,8 +202,9 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                                 NameObject("/V"):TextStringObject(choice_dict[field][1])
                                 })
                         
-                #checkboxes on this form are kids of a parent object.
+                #checkboxes on pre6 form are kids of a parent object.
                 #accesses parent of object to get NameID
+                #checkboxes on cont form are accesible by "/T" alone
                 for field in radio_dict:
                     if "/Parent" in writer_annot:
                         if writer_annot["/Parent"].get("/T") == field:
@@ -212,7 +213,6 @@ def write_form(lecturer,employee_dict, radio_dict, choice_dict):
                                 NameObject("/V"):NameObject(radio_dict[field]),
                                 NameObject("/AS"):NameObject(radio_dict[field])})
                     elif writer_annot.get("/T")==field:
-                         
                          writer_annot.update({
                             NameObject("/V"):NameObject(radio_dict[field]),
                             NameObject("/AS"):NameObject(radio_dict[field])})
@@ -236,27 +236,5 @@ def fill_form(lecturer,AY,HR,dept):
     employee_dict,radio_dict, choice_dict=form_dicts(lecturer,AY,HR,dept)
     write_form(lecturer, employee_dict, radio_dict, choice_dict)
     
-def test():
-    
-    output=PdfFileWriter()
-    template=PdfFileReader(open("Heron.Cady_form.pdf", 'rb'))
-    fields=template.getFields()
-    #for field in fields:
-        #print(field)
-    page=template.getPage(0)
-    for j in range(0, len(page['/Annots'])):
-                writer_annot = page['/Annots'][j].getObject()
-                print(writer_annot)
-    
-     
-    
-    #print(output._root_object)
-    #print(template.getPage(1)['/Annots'][74].getObject())
-    
-    output.cloneReaderDocumentRoot(template)
-    
-    output._root_object["/AcroForm"][NameObject("/NeedAppearances")]=BooleanObject(True)
-    outputStream=open("NewPDF.pdf", "wb")
-    output.write(outputStream)
-#test()
+
 
